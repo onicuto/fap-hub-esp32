@@ -42,6 +42,7 @@ def main():
     parser = argparse.ArgumentParser(description="Build Flipper FAP apps for ESP32")
     parser.add_argument("--config", default="apps.yaml", help="Path to apps.yaml")
     parser.add_argument("--fw-dir", default=None, help="Path to ESP32 firmware repository")
+    parser.add_argument("--pio-libs", default=None, help="Path to ESP32-S3 framework libraries")
     parser.add_argument("--toolchain-prefix", default=None, help="Toolchain prefix (e.g. xtensa-esp32s3-elf-)")
     parser.add_argument("--output-dir", default="dist", help="Output directory for compiled FAPs and catalog")
     parser.add_argument("--app", default=None, help="Build only specific app ID")
@@ -113,9 +114,22 @@ def main():
     ]
 
     # Additional IDF headers from platformio or toolchain sysroot
-    home = Path.home()
-    pio_libs = home / ".platformio/packages/framework-arduinoespressif32-libs/esp32s3"
-    if pio_libs.exists():
+    pio_libs = None
+    if args.pio_libs:
+        c = Path(args.pio_libs).expanduser().resolve()
+        if c.exists():
+            pio_libs = c
+    if not pio_libs:
+        for candidate in [
+            Path.home() / ".platformio/packages/framework-arduinoespressif32-libs/esp32s3",
+            Path("/home/runner/.platformio/packages/framework-arduinoespressif32-libs/esp32s3"),
+        ]:
+            if candidate.exists():
+                pio_libs = candidate
+                break
+
+    if pio_libs and pio_libs.exists():
+        print(f"Using ESP32-S3 framework headers from: {pio_libs}")
         includes.extend([
             f"-I{pio_libs}/qio_qspi/include",
             f"-I{pio_libs}/include/freertos",
@@ -148,6 +162,11 @@ def main():
             f"-I{pio_libs}/include/heap/include",
             f"-I{pio_libs}/include/esp_timer/include",
         ])
+    else:
+        print("ERROR: ESP32-S3 framework headers directory not found!")
+        print(f"args.pio_libs={args.pio_libs}")
+        print(f"Path.home()={Path.home()}")
+        sys.exit(1)
 
     catalog_apps = []
 
