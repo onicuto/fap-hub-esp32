@@ -53,7 +53,7 @@ jobs:
           path: |
             /opt/xtensa-esp32s3-elf
             ~/.platformio/packages/framework-arduinoespressif32-libs
-          key: xtensa-esp32s3-12.2.0-v2
+          key: xtensa-esp32s3-12.2.0-v3
 
       - name: Download Xtensa Toolchain
         if: steps.cache-toolchain.outputs.cache-hit != 'true'
@@ -66,8 +66,10 @@ jobs:
       - name: Download ESP32-S3 Framework Headers
         if: steps.cache-toolchain.outputs.cache-hit != 'true'
         run: |
-          mkdir -p ~/.platformio/packages
-          git clone --depth 1 -b idf-release/v5.1 https://github.com/espressif/esp32-arduino-libs.git ~/.platformio/packages/framework-arduinoespressif32-libs
+          mkdir -p ~/.platformio/packages/framework-arduinoespressif32-libs
+          curl -fSL --retry 3 https://github.com/espressif/arduino-esp32/releases/download/3.3.9/esp32-core-3.3.9-libs.tar.xz -o libs.tar.xz
+          tar -xJf libs.tar.xz -C ~/.platformio/packages/framework-arduinoespressif32-libs esp32s3
+          rm -f libs.tar.xz
 
       - name: Add Toolchain to PATH
         run: |
