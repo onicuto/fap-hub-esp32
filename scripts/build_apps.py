@@ -115,18 +115,21 @@ def main():
 
     # Additional IDF headers from platformio or toolchain sysroot
     pio_libs = None
+    candidates = []
     if args.pio_libs:
-        c = Path(args.pio_libs).expanduser().resolve()
-        if c.exists():
+        raw = Path(args.pio_libs).expanduser().resolve()
+        candidates.extend([raw, raw / "esp32-arduino-libs/esp32s3", raw / "esp32s3"])
+    home = Path.home()
+    candidates.extend([
+        home / ".platformio/packages/framework-arduinoespressif32-libs/esp32s3",
+        home / ".platformio/packages/framework-arduinoespressif32-libs/esp32-arduino-libs/esp32s3",
+        Path("/home/runner/.platformio/packages/framework-arduinoespressif32-libs/esp32s3"),
+        Path("/home/runner/.platformio/packages/framework-arduinoespressif32-libs/esp32-arduino-libs/esp32s3"),
+    ])
+    for c in candidates:
+        if c.exists() and (c / "include").exists():
             pio_libs = c
-    if not pio_libs:
-        for candidate in [
-            Path.home() / ".platformio/packages/framework-arduinoespressif32-libs/esp32s3",
-            Path("/home/runner/.platformio/packages/framework-arduinoespressif32-libs/esp32s3"),
-        ]:
-            if candidate.exists():
-                pio_libs = candidate
-                break
+            break
 
     if pio_libs and pio_libs.exists():
         print(f"Using ESP32-S3 framework headers from: {pio_libs}")

@@ -70,6 +70,9 @@ jobs:
           curl -fSL --retry 3 https://github.com/espressif/arduino-esp32/releases/download/3.3.9/esp32-core-3.3.9-libs.tar.xz -o libs.tar.xz
           tar -xJf libs.tar.xz -C /home/runner/.platformio/packages/framework-arduinoespressif32-libs
           rm -f libs.tar.xz
+          if [ -d "/home/runner/.platformio/packages/framework-arduinoespressif32-libs/esp32-arduino-libs/esp32s3" ]; then
+            cp -rn /home/runner/.platformio/packages/framework-arduinoespressif32-libs/esp32-arduino-libs/* /home/runner/.platformio/packages/framework-arduinoespressif32-libs/ || true
+          fi
           ls -la /home/runner/.platformio/packages/framework-arduinoespressif32-libs
 
       - name: Add Toolchain to PATH
