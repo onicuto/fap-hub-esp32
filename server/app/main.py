@@ -124,9 +124,10 @@ def format_app_for_client(app_meta: dict, base_url: str):
         }
     }
 
-# Categories endpoints (support both /0/category and /api/v0/category)
+# Categories endpoints
 @app.get("/0/category")
 @app.get("/api/v0/category")
+@app.get("/api/v0/0/category")
 async def get_categories(request: Request, limit: Optional[int] = 100):
     catalog = load_catalog_data()
     cats = catalog.get("categories", [])
@@ -148,6 +149,7 @@ async def get_categories(request: Request, limit: Optional[int] = 100):
 # Single category endpoint
 @app.get("/0/category/{category_id}")
 @app.get("/api/v0/category/{category_id}")
+@app.get("/api/v0/0/category/{category_id}")
 async def get_category(category_id: str, request: Request):
     catalog = load_catalog_data()
     cats = catalog.get("categories", [])
@@ -168,6 +170,7 @@ async def get_category(category_id: str, request: Request):
 # Applications list endpoint (POST /1/application and /api/v0/application)
 @app.post("/1/application")
 @app.post("/api/v0/application")
+@app.post("/api/v0/1/application")
 async def list_applications(request: Request, query: ApplicationsQuery):
     catalog = load_catalog_data()
     apps = catalog.get("applications", [])
@@ -193,6 +196,7 @@ async def list_applications(request: Request, query: ApplicationsQuery):
 # Featured applications
 @app.get("/0/application/featured")
 @app.get("/api/v0/application/featured")
+@app.get("/api/v0/0/application/featured")
 async def get_featured(request: Request):
     catalog = load_catalog_data()
     apps = catalog.get("applications", [])
@@ -202,6 +206,7 @@ async def get_featured(request: Request):
 # Application detail
 @app.get("/0/application/{uid}")
 @app.get("/api/v0/application/{uid}")
+@app.get("/api/v0/0/application/{uid}")
 async def get_application(uid: str, request: Request):
     catalog = load_catalog_data()
     app_meta = next((a for a in catalog.get("applications", []) if a.get("id") == uid), None)
@@ -213,6 +218,7 @@ async def get_application(uid: str, request: Request):
 # Binary FAP download endpoint
 @app.api_route("/0/application/version/{version_id}/build/compatible", methods=["GET", "HEAD"])
 @app.api_route("/api/v0/application/version/{version_id}/build/compatible", methods=["GET", "HEAD"])
+@app.api_route("/api/v0/0/application/version/{version_id}/build/compatible", methods=["GET", "HEAD"])
 async def download_compatible_build(version_id: str):
     # version_id is like "ver_{app_id}_{version}"
     catalog = load_catalog_data()
