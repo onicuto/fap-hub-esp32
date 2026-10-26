@@ -145,6 +145,26 @@ async def get_categories(request: Request, limit: Optional[int] = 100):
         })
     return res
 
+# Single category endpoint
+@app.get("/0/category/{category_id}")
+@app.get("/api/v0/category/{category_id}")
+async def get_category(category_id: str, request: Request):
+    catalog = load_catalog_data()
+    cats = catalog.get("categories", [])
+    base_url = get_base_url(request)
+    for c in cats:
+        if c.get("id") == category_id:
+            count = sum(1 for a in catalog.get("applications", []) if a.get("category") == category_id)
+            return {
+                "_id": category_id,
+                "priority": c.get("priority", 1),
+                "name": c.get("name", category_id.capitalize()),
+                "color": c.get("color", "#4A90E2"),
+                "icon_uri": f"{base_url}/icons/cat_{category_id}.svg",
+                "applications": count
+            }
+    raise HTTPException(status_code=404, detail="Category not found")
+
 # Applications list endpoint (POST /1/application and /api/v0/application)
 @app.post("/1/application")
 @app.post("/api/v0/application")
@@ -191,8 +211,8 @@ async def get_application(uid: str, request: Request):
     return format_app_for_client(app_meta, base_url)
 
 # Binary FAP download endpoint
-@app.get("/0/application/version/{version_id}/build/compatible")
-@app.get("/api/v0/application/version/{version_id}/build/compatible")
+@app.api_route("/0/application/version/{version_id}/build/compatible", methods=["GET", "HEAD"])
+@app.api_route("/api/v0/application/version/{version_id}/build/compatible", methods=["GET", "HEAD"])
 async def download_compatible_build(version_id: str):
     # version_id is like "ver_{app_id}_{version}"
     catalog = load_catalog_data()
