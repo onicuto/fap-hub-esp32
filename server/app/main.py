@@ -80,8 +80,12 @@ def format_app_for_client(app_meta: dict, base_url: str):
     icon_url = f"{base_url}/icons/{icon_filename}" if icon_filename else f"{base_url}/icons/default.png"
     fap_filename = app_meta.get("fap_file", f"{app_id}.fap")
     bundle_url = f"{base_url}/builds/{fap_filename}"
-    target = str(app_meta.get("target", "32"))
+    raw_target = str(app_meta.get("target", "32"))
+    target = raw_target if raw_target.startswith("f") else f"f{raw_target}"
     api_version = str(app_meta.get("api_version", "1.0"))
+
+    fap_path = BUILDS_DIR / fap_filename
+    fap_size = fap_path.stat().st_size if fap_path.exists() else 12896
 
     return {
         "_id": app_id,
@@ -108,17 +112,18 @@ def format_app_for_client(app_meta: dict, base_url: str):
                 },
                 "metadata": {
                     "_id": f"asset_{app_id}_{version}",
-                    "filename": fap_filename
+                    "filename": fap_filename,
+                    "length": fap_size
                 }
             },
             "description": app_meta.get("description", ""),
             "changelog": "Initial release for ESP32",
             "links": {
                 "bundle_uri": bundle_url,
-                "manifest_uri": "",
+                "manifest_uri": bundle_url,
                 "source_code": {
                     "type": "APPLICATION_SOURCE_TYPE_DEFAULT",
-                    "uri": ""
+                    "uri": app_meta.get("source_code") or f"https://github.com/cobanov/{app_id}"
                 }
             }
         }
@@ -185,6 +190,9 @@ async def list_applications(request: Request, query: ApplicationsQuery):
     if query.applications:
         app_set = set(query.applications)
         apps = [a for a in apps if a.get("id") in app_set]
+    if query.target:
+        target_norm = query.target.lower().lstrip("f")
+        apps = [a for a in apps if str(a.get("target", "32")).lower().lstrip("f") == target_norm]
 
     # Pagination
     offset = query.offset or 0
