@@ -4,3 +4,15 @@ __pycache__/
 .DS_Store
 dist/builds/*.fap
 !dist/builds/kota.fap
+
+# Build & temporary files
+firmware/
+*.zip
+
+# Virtual environments & IDE
+.venv/
+venv/
+ENV/
+.env
+.vscode/
+.idea/

@@ -60,8 +60,9 @@ def main():
 
     fw_dir = Path(args.fw_dir) if args.fw_dir else project_root / "firmware"
     if not fw_dir.exists():
-        # Fallback to local reference if exists
-        local_ref = Path("/Users/onicuto/projects/qMobile/references/esp32_firmware")
+        # Fallback to env or local reference if exists
+        env_fw = os.environ.get("FW_DIR")
+        local_ref = Path(env_fw) if env_fw else Path.home() / "projects/qMobile/references/esp32_firmware"
         if local_ref.exists():
             fw_dir = local_ref
         else:

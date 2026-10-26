@@ -18,8 +18,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-DIST_DIR = PROJECT_ROOT / "dist"
+def get_dist_dir() -> Path:
+    if "DIST_DIR" in os.environ:
+        return Path(os.environ["DIST_DIR"])
+    # Local development: server/app/../../dist -> fap-hub-esp32/dist
+    repo_dist = Path(__file__).resolve().parent.parent.parent / "dist"
+    if repo_dist.exists():
+        return repo_dist
+    # Docker container: /app/app/../dist -> /app/dist
+    docker_dist = Path(__file__).resolve().parent.parent / "dist"
+    if docker_dist.exists():
+        return docker_dist
+    return repo_dist
+
+DIST_DIR = get_dist_dir()
 CATALOG_FILE = DIST_DIR / "catalog.json"
 BUILDS_DIR = DIST_DIR / "builds"
 ICONS_DIR = DIST_DIR / "icons"
