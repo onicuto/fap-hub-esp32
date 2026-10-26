@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  catalog:
+    build: .
+    container_name: fap-hub-esp32
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./dist:/app/dist:ro

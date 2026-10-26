@@ -1,0 +1,104 @@
+name: Build ESP32 FAP Apps
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'apps.yaml'
+      - 'apps.json'
+      - 'scripts/**'
+      - 'tools/**'
+  workflow_dispatch:
+    inputs:
+      app_id:
+        description: 'Specific App ID to build (leave empty for all)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Checkout Firmware Reference
+        uses: actions/checkout@v4
+        with:
+          repository: Sor3nt/Flipper-Zero-ESP32-Port
+          path: firmware
+          depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Python Dependencies
+        run: |
+          pip install --upgrade pip
+          pip install pyyaml pillow
+
+      - name: Cache Xtensa Toolchain & Headers
+        id: cache-toolchain
+        uses: actions/cache@v4
+        with:
+          path: |
+            /opt/xtensa-esp32s3-elf
+            ~/.platformio/packages/framework-arduinoespressif32-libs
+          key: xtensa-esp32s3-12.2.0-v1
+
+      - name: Download Xtensa Toolchain
+        if: steps.cache-toolchain.outputs.cache-hit != 'true'
+        run: |
+          sudo mkdir -p /opt
+          wget -q https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/xtensa-esp32s3-elf-12.2.0_20230208-x86_64-linux-gnu.tar.gz
+          sudo tar -xzf xtensa-esp32s3-elf-12.2.0_20230208-x86_64-linux-gnu.tar.gz -C /opt
+          rm xtensa-esp32s3-elf-12.2.0_20230208-x86_64-linux-gnu.tar.gz
+
+      - name: Download ESP32-S3 Framework Headers
+        if: steps.cache-toolchain.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ~/.platformio/packages
+          git clone --depth 1 -b master https://github.com/espressif/esp32-arduino-libs.git ~/.platformio/packages/framework-arduinoespressif32-libs
+
+      - name: Add Toolchain to PATH
+        run: |
+          echo "/opt/xtensa-esp32s3-elf/bin" >> $GITHUB_PATH
+
+      - name: Build FAPs
+        run: |
+          APP_ARG=""
+          if [ -n "${{ github.event.inputs.app_id }}" ]; then
+            APP_ARG="--app ${{ github.event.inputs.app_id }}"
+          fi
+          python3 scripts/build_apps.py \
+            --fw-dir firmware \
+            --toolchain-prefix /opt/xtensa-esp32s3-elf/bin/xtensa-esp32s3-elf- \
+            --output-dir dist \
+            $APP_ARG
+
+      - name: Create Release Archive
+        run: |
+          cd dist
+          zip -r ../fap-hub-esp32-dist.zip .
+          cd ..
+
+      - name: Deploy to GitHub Pages
+        if: github.ref == 'refs/heads/main'
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: fap-hub-dist
+          path: dist/

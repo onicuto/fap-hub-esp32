@@ -1,0 +1,30 @@
+{
+  "categories": [
+    { "id": "bluetooth", "name": "Bluetooth", "priority": 1 },
+    { "id": "games", "name": "Games", "priority": 2 },
+    { "id": "tools", "name": "Tools", "priority": 3 },
+    { "id": "infrared", "name": "Infrared", "priority": 4 },
+    { "id": "subghz", "name": "Sub-GHz", "priority": 5 }
+  ],
+  "apps": [
+    {
+      "id": "kota",
+      "name": "Kota",
+      "category": "bluetooth",
+      "author": "cobanov",
+      "description": "Claude & ChatGPT AI usage tracker over Bluetooth Low Energy",
+      "version": "1.0",
+      "repository": "https://github.com/cobanov/kota",
+      "subpath": "flipper",
+      "entry_point": "kota_app",
+      "stack_size": 16384,
+      "icon": "kota_10px.png",
+      "sources": [
+        "kota.c"
+      ],
+      "compat_shims": [
+        "strtol"
+      ]
+    }
+  ]
+}
