@@ -87,6 +87,7 @@ def main():
 
     # Core include directories
     includes = [
+        f"-I{project_root}/tools/compat",
         f"-I{fw_dir}/components/compat",
         f"-I{fw_dir}/components",
         f"-I{fw_dir}",
