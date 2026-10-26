@@ -8,6 +8,7 @@ on:
       - 'apps.json'
       - 'scripts/**'
       - 'tools/**'
+      - '.github/workflows/**'
   workflow_dispatch:
     inputs:
       app_id:
@@ -32,7 +33,7 @@ jobs:
         with:
           repository: Sor3nt/Flipper-Zero-ESP32-Port
           path: firmware
-          depth: 1
+          fetch-depth: 1
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -52,21 +53,21 @@ jobs:
           path: |
             /opt/xtensa-esp32s3-elf
             ~/.platformio/packages/framework-arduinoespressif32-libs
-          key: xtensa-esp32s3-12.2.0-v1
+          key: xtensa-esp32s3-12.2.0-v2
 
       - name: Download Xtensa Toolchain
         if: steps.cache-toolchain.outputs.cache-hit != 'true'
         run: |
           sudo mkdir -p /opt
-          wget -q https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/xtensa-esp32s3-elf-12.2.0_20230208-x86_64-linux-gnu.tar.gz
-          sudo tar -xzf xtensa-esp32s3-elf-12.2.0_20230208-x86_64-linux-gnu.tar.gz -C /opt
-          rm xtensa-esp32s3-elf-12.2.0_20230208-x86_64-linux-gnu.tar.gz
+          curl -fSL --retry 3 https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/xtensa-esp32s3-elf-12.2.0_20230208-x86_64-linux-gnu.tar.gz -o xtensa-esp32s3-elf.tar.gz
+          sudo tar -xzf xtensa-esp32s3-elf.tar.gz -C /opt
+          rm -f xtensa-esp32s3-elf.tar.gz
 
       - name: Download ESP32-S3 Framework Headers
         if: steps.cache-toolchain.outputs.cache-hit != 'true'
         run: |
           mkdir -p ~/.platformio/packages
-          git clone --depth 1 -b master https://github.com/espressif/esp32-arduino-libs.git ~/.platformio/packages/framework-arduinoespressif32-libs
+          git clone --depth 1 -b idf-release/v5.1 https://github.com/espressif/esp32-arduino-libs.git ~/.platformio/packages/framework-arduinoespressif32-libs
 
       - name: Add Toolchain to PATH
         run: |

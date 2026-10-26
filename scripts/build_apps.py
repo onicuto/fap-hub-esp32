@@ -255,7 +255,7 @@ def main():
 
         # Symbol validation
         undef_syms_file = app_build_dir / "undef_syms.txt"
-        nm_res = run_cmd(f"{NM} -u {final_fap} 2>/dev/null | grep '^         U ' | sed 's/^         U //' | sort -u > {undef_syms_file}", shell=True, check=False)
+        nm_res = run_cmd(f"{NM} -u {final_fap} 2>/dev/null | awk '$1 == \"U\" {{print $2}}' | sort -u > {undef_syms_file}", shell=True, check=False)
         fw_api = fw_dir / "components/flipper_application/flipper_application/firmware_api.c"
         if fw_api.exists():
             check_res = run_cmd(["python3", str(project_root / "tools/check_fap_symbols.py"), str(fw_api), str(undef_syms_file)], check=False)
