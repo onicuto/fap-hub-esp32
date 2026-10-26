@@ -61,6 +61,18 @@ class ApplicationsQuery(BaseModel):
     has_version: Optional[bool] = None
     is_latest_release_version: Optional[bool] = None
 
+def get_base_url(request: Request) -> str:
+    env_base = os.environ.get("BASE_URL")
+    if env_base:
+        return env_base.rstrip("/")
+    proto = request.headers.get("x-forwarded-proto") or request.url.scheme
+    host = request.headers.get("x-forwarded-host") or request.headers.get("host")
+    if host:
+        if proto == "http" and ("fap.onicuto.ru" in host or (not host.startswith("localhost") and not host.startswith("127.0.0.1"))):
+            proto = "https"
+        return f"{proto}://{host}".rstrip("/")
+    return str(request.base_url).rstrip("/")
+
 def format_app_for_client(app_meta: dict, base_url: str):
     app_id = app_meta["id"]
     version = app_meta.get("version", "1.0")
@@ -68,6 +80,8 @@ def format_app_for_client(app_meta: dict, base_url: str):
     icon_url = f"{base_url}/icons/{icon_filename}" if icon_filename else f"{base_url}/icons/default.png"
     fap_filename = app_meta.get("fap_file", f"{app_id}.fap")
     bundle_url = f"{base_url}/builds/{fap_filename}"
+    target = str(app_meta.get("target", "32"))
+    api_version = str(app_meta.get("api_version", "1.0"))
 
     return {
         "_id": app_id,
@@ -83,6 +97,20 @@ def format_app_for_client(app_meta: dict, base_url: str):
             "icon_uri": icon_url,
             "screenshots": [],
             "status": "READY",
+            "current_build": {
+                "_id": f"bld_{app_id}_{version}",
+                "sdk": {
+                    "_id": f"sdk_esp32_{target}",
+                    "name": "ESP32",
+                    "target": target,
+                    "api": api_version,
+                    "is_latest_release": True
+                },
+                "metadata": {
+                    "_id": f"asset_{app_id}_{version}",
+                    "filename": fap_filename
+                }
+            },
             "description": app_meta.get("description", ""),
             "changelog": "Initial release for ESP32",
             "links": {
@@ -102,7 +130,7 @@ def format_app_for_client(app_meta: dict, base_url: str):
 async def get_categories(request: Request, limit: Optional[int] = 100):
     catalog = load_catalog_data()
     cats = catalog.get("categories", [])
-    base_url = str(request.base_url).rstrip("/")
+    base_url = get_base_url(request)
     res = []
     for c in cats:
         cat_id = c["id"]
@@ -123,7 +151,7 @@ async def get_categories(request: Request, limit: Optional[int] = 100):
 async def list_applications(request: Request, query: ApplicationsQuery):
     catalog = load_catalog_data()
     apps = catalog.get("applications", [])
-    base_url = str(request.base_url).rstrip("/")
+    base_url = get_base_url(request)
 
     # Filtering
     if query.category_id:
@@ -148,7 +176,7 @@ async def list_applications(request: Request, query: ApplicationsQuery):
 async def get_featured(request: Request):
     catalog = load_catalog_data()
     apps = catalog.get("applications", [])
-    base_url = str(request.base_url).rstrip("/")
+    base_url = get_base_url(request)
     return [format_app_for_client(a, base_url) for a in apps[:5]]
 
 # Application detail
@@ -159,7 +187,7 @@ async def get_application(uid: str, request: Request):
     app_meta = next((a for a in catalog.get("applications", []) if a.get("id") == uid), None)
     if not app_meta:
         raise HTTPException(status_code=404, detail="Application not found")
-    base_url = str(request.base_url).rstrip("/")
+    base_url = get_base_url(request)
     return format_app_for_client(app_meta, base_url)
 
 # Binary FAP download endpoint
