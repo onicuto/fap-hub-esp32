@@ -68,7 +68,7 @@ def get_base_url(request: Request) -> str:
     proto = request.headers.get("x-forwarded-proto") or request.url.scheme
     host = request.headers.get("x-forwarded-host") or request.headers.get("host")
     if host:
-        if proto == "http" and ("fap.onicuto.ru" in host or (not host.startswith("localhost") and not host.startswith("127.0.0.1"))):
+        if proto == "http" and "fap.onicuto.ru" in host:
             proto = "https"
         return f"{proto}://{host}".rstrip("/")
     return str(request.base_url).rstrip("/")
