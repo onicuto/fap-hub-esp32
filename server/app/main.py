@@ -74,15 +74,15 @@ class ApplicationsQuery(BaseModel):
     is_latest_release_version: Optional[bool] = None
 
 def get_base_url(request: Request) -> str:
+    proto = request.headers.get("x-forwarded-proto") or request.url.scheme
+    host = request.headers.get("x-forwarded-host") or request.headers.get("host")
+    if proto == "https":
+        return "https://fap.onicuto.ru"
+    if host:
+        return f"http://{host}".rstrip("/")
     env_base = os.environ.get("BASE_URL")
     if env_base:
         return env_base.rstrip("/")
-    proto = request.headers.get("x-forwarded-proto") or request.url.scheme
-    host = request.headers.get("x-forwarded-host") or request.headers.get("host")
-    if host:
-        if proto == "http" and "fap.onicuto.ru" in host:
-            proto = "https"
-        return f"{proto}://{host}".rstrip("/")
     return str(request.base_url).rstrip("/")
 
 def format_app_for_client(app_meta: dict, base_url: str):

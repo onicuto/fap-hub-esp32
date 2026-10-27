@@ -16,3 +16,6 @@ ENV/
 .env
 .vscode/
 .idea/
+
+# Server scripts
+sync_catalog.sh
