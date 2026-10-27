@@ -142,9 +142,9 @@ def format_app_for_client(app_meta: dict, base_url: str):
     }
 
 # Categories endpoints
-@app.get("/0/category")
-@app.get("/api/v0/category")
-@app.get("/api/v0/0/category")
+@app.api_route("/0/category", methods=["GET", "HEAD"])
+@app.api_route("/api/v0/category", methods=["GET", "HEAD"])
+@app.api_route("/api/v0/0/category", methods=["GET", "HEAD"])
 async def get_categories(request: Request, limit: Optional[int] = 100):
     catalog = load_catalog_data()
     cats = catalog.get("categories", [])
@@ -164,9 +164,9 @@ async def get_categories(request: Request, limit: Optional[int] = 100):
     return res
 
 # Single category endpoint
-@app.get("/0/category/{category_id}")
-@app.get("/api/v0/category/{category_id}")
-@app.get("/api/v0/0/category/{category_id}")
+@app.api_route("/0/category/{category_id}", methods=["GET", "HEAD"])
+@app.api_route("/api/v0/category/{category_id}", methods=["GET", "HEAD"])
+@app.api_route("/api/v0/0/category/{category_id}", methods=["GET", "HEAD"])
 async def get_category(category_id: str, request: Request):
     catalog = load_catalog_data()
     cats = catalog.get("categories", [])
@@ -214,9 +214,9 @@ async def list_applications(request: Request, query: ApplicationsQuery):
     return [format_app_for_client(a, base_url) for a in paged]
 
 # Featured applications
-@app.get("/0/application/featured")
-@app.get("/api/v0/application/featured")
-@app.get("/api/v0/0/application/featured")
+@app.api_route("/0/application/featured", methods=["GET", "HEAD"])
+@app.api_route("/api/v0/application/featured", methods=["GET", "HEAD"])
+@app.api_route("/api/v0/0/application/featured", methods=["GET", "HEAD"])
 async def get_featured(request: Request):
     catalog = load_catalog_data()
     apps = catalog.get("applications", [])
@@ -224,9 +224,9 @@ async def get_featured(request: Request):
     return [format_app_for_client(a, base_url) for a in apps[:5]]
 
 # Application detail
-@app.get("/0/application/{uid}")
-@app.get("/api/v0/application/{uid}")
-@app.get("/api/v0/0/application/{uid}")
+@app.api_route("/0/application/{uid}", methods=["GET", "HEAD"])
+@app.api_route("/api/v0/application/{uid}", methods=["GET", "HEAD"])
+@app.api_route("/api/v0/0/application/{uid}", methods=["GET", "HEAD"])
 async def get_application(uid: str, request: Request):
     catalog = load_catalog_data()
     app_meta = next((a for a in catalog.get("applications", []) if a.get("id") == uid), None)
@@ -270,6 +270,6 @@ async def download_compatible_build(version_id: str):
         media_type="application/octet-stream"
     )
 
-@app.get("/health")
+@app.api_route("/health", methods=["GET", "HEAD"])
 def health():
     return {"status": "ok"}
