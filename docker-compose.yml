@@ -11,3 +11,11 @@ services:
       - BASE_URL=https://fap.onicuto.ru
     volumes:
       - ./dist:/app/dist:ro
+    networks:
+      - fapnet
+
+networks:
+  fapnet:
+    driver: bridge
+    driver_opts:
+      com.docker.network.driver.mtu: 1400
