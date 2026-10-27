@@ -18,6 +18,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.middleware("http")
+async def add_cache_headers(request: Request, call_next):
+    response = await call_next(request)
+    path = request.url.path
+    if path.startswith("/icons/") or path.startswith("/builds/"):
+        response.headers["Cache-Control"] = "public, max-age=86400"
+    elif "category" in path:
+        response.headers["Cache-Control"] = "public, max-age=3600"
+    elif "application" in path:
+        response.headers["Cache-Control"] = "public, max-age=60"
+    return response
+
 def get_dist_dir() -> Path:
     if "DIST_DIR" in os.environ:
         return Path(os.environ["DIST_DIR"])
